@@ -2,10 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>EPIC RPG ULTIMATE - 20+ Hours ⚔️🔥</title>
+  <title>EPIC RPG ULTIMATE v2 - Locked Adventure ⚔️🔥</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { margin:0; background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%); display:flex; flex-direction:column; height:100vh; font-family: 'Courier New', monospace; color: #fff; }
+    body { 
+      margin:0; 
+      background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%); 
+      display:flex; 
+      flex-direction:column; 
+      height:100vh; 
+      font-family: 'Courier New', monospace;
+      color: #fff; 
+    }
     canvas { flex:1; image-rendering: pixelated; border: 2px solid #ffd700; box-shadow: 0 0 20px #ffd700; }
     #ui { position:absolute; bottom:10px; left:10px; right:10px; pointer-events:none; z-index:100; }
     .hud { background:rgba(0,0,0,0.8); color:#ffd700; padding:12px; border:2px solid #ffd700; border-radius:8px; display:inline-block; pointer-events:auto; margin:5px; }
@@ -17,21 +25,45 @@
     .item.equipped { border-color:#ffd700; box-shadow:0 0 15px #ffd700; }
     .item:hover { background:rgba(255,215,0,0.3); }
     #skills { display:flex; gap:10px; flex-wrap:wrap; }
-    #map-select { position:absolute; top:10px; right:10px; }
+    #map-select { position:absolute; top:10px; right:10px; display:none; } /* Hidden until unlocked */
     .map-btn { background:linear-gradient(45deg, #4a90e2, #357abd); color:#fff; }
     .quest-log { max-height:200px; overflow-y:auto; font-size:14px; }
+    #title-screen { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:200; }
+    #title-screen input { background:#333; color:#fff; border:2px solid #ffd700; padding:10px; font-size:18px; margin:10px; border-radius:5px; width:300px; }
+    .title-btn { font-size:24px; padding:15px 30px; margin:10px; }
+    #locked-info { position:absolute; top:50px; right:50px; background:rgba(0,0,0,0.8); padding:20px; border:2px solid #ffd700; border-radius:10px; max-width:300px; }
   </style>
 </head>
 <body>
+  <div id="title-screen">
+    <h1 style="font-size:64px; margin:0; color:#ffd700;">EPIC RPG</h1>
+    <p style="font-size:32px; margin:20px 0;">Choose Your Destiny</p>
+    <input id="player-name" placeholder="Enter Hero Name" maxlength="20">
+    <div>
+      <button class="title-btn" onclick="startGame('easy', 'village')">Easy - Village</button>
+      <button class="title-btn" onclick="startGame('normal', 'forest')">Normal - Forest</button>
+      <button class="title-btn" onclick="startGame('hard', 'dungeon')">Hard - Dungeon</button>
+    </div>
+    <p style="margin-top:30px; font-size:18px;">Complete quests to unlock maps! Wipe save to restart.</p>
+  </div>
+
+  <div id="locked-info" style="display:none;">
+    <h3>Locked Run</h3>
+    <p><strong>Name:</strong> <span id="locked-name"></span></p>
+    <p><strong>Difficulty:</strong> <span id="locked-diff"></span></p>
+    <p><strong>Start Map:</strong> <span id="locked-map"></span></p>
+    <p>Wipe data to change!</p>
+  </div>
+
   <div id="ui">
     <div class="hud">
-      <strong>LV <span id="level">1</span></strong> | HP <span id="hp">100/100</span> | MP <span id="mp">50/50</span> | Gold <span id="gold">0</span> | <span id="quests">Quests: 0/5</span>
+      <strong>LV <span id="level">1</span> | <span id="player-name-hud">Hero</span></strong> | HP <span id="hp">100/100</span> | MP <span id="mp">50/50</span> | Gold <span id="gold">0</span> | <span id="quests">Quests: 0/5</span>
     </div>
     <div class="hud">
       <button onclick="showMenu('inventory')">Inventory</button>
       <button onclick="showMenu('skills')">Skills</button>
       <button onclick="showMenu('quests')">Quests</button>
-      <button onclick="manualSave()">Save</button>
+      <button onclick="wipeSave()">Wipe Save</button>
       <div id="menu-inv" style="display:none;">
         <h3>Inventory</h3><div id="inv-grid"></div>
       </div>
@@ -61,9 +93,23 @@
       document.getElementById(`menu-${menu}`).style.display = 'block';
       currentMenu = menu;
     }
-    function changeMap(map) { window.changeMap(map); }
+    function changeMap(map) { if (window.gameInstance && window.gameInstance.scene.getScene('World')) window.gameInstance.scene.getScene('World').changeMap(map); }
     function manualSave() { localStorage.setItem('rpgSave', JSON.stringify(window.saveData)); alert('Saved!'); }
-    // Auto-update UI every sec
+    function wipeSave() { if (confirm('Wipe save and restart?')) { localStorage.removeItem('rpgSave'); location.reload(); } }
+    function startGame(diff, startMap) {
+      const name = document.getElementById('player-name').value || 'Hero';
+      window.selectedDiff = diff;
+      window.selectedMap = startMap;
+      window.playerName = name;
+      document.getElementById('title-screen').style.display = 'none';
+      document.getElementById('locked-info').style.display = 'block';
+      document.getElementById('locked-name').textContent = name;
+      document.getElementById('locked-diff').textContent = diff.toUpperCase();
+      document.getElementById('locked-map').textContent = startMap;
+      document.getElementById('player-name-hud').textContent = name;
+      window.gameInstance.scene.start('Title'); // Triggers new game with settings
+    }
+    // Auto-update UI
     setInterval(updateUI, 1000);
     function updateUI() {
       if (!window.saveData) return;
@@ -79,30 +125,9 @@
     function updateInvUI() {
       const grid = document.getElementById('inv-grid');
       grid.innerHTML = '';
-      saveData.inventory.forEach(item => {
+      (saveData.inventory || []).forEach(item => {
         const slot = document.createElement('div');
-        slot.className = 'item' + (saveData.equipment.weapon === item ? ' equipped' : '');
+        slot.className = 'item' + (saveData.equipment?.weapon === item ? ' equipped' : '');
         slot.innerHTML = item === 'sword' ? '⚔️' : item === 'potion' ? '🧪' : item === 'fire_staff' ? '🔥' : '💎';
-        slot.onclick = () => { saveData.equipment.weapon = item; updateUI(); };
-        grid.appendChild(slot);
-      });
-    }
-    function updateSkillsUI() {
-      const cont = document.getElementById('skills');
-      cont.innerHTML = '';
-      saveData.skills.forEach(skill => {
-        const btn = document.createElement('button');
-        btn.textContent = skill.name;
-        btn.onclick = () => window.castSkill(skill.id);
-        cont.appendChild(btn);
-      });
-    }
-    function updateQuestsUI() {
-      const log = document.getElementById('quest-log');
-      log.innerHTML = Object.values(saveData.quests.available).map(q => 
-        `<div>${q.name}: ${q.progress}/${q.target} ${saveData.quests.completed.includes(q.id) ? '✅' : ''}</div>`
-      ).join('');
-    }
-  </script>
-</body>
-</html>
+        slot.onclick = () => { saveData.equipment = saveData.equipment || {}; saveData.equipment.weapon = item; updateUI(); };
+        grid.append
