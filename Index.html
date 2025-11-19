@@ -2,93 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>My Epic RPG - FULL VERSION ⚔️✨</title>
+  <title>EPIC RPG ULTIMATE - 20+ Hours ⚔️🔥</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { 
-      margin:0; 
-      background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%); 
-      display:flex; 
-      justify-content:center; 
-      align-items:center; 
-      height:100vh; 
-      font-family: 'Courier New', monospace;
-      color: #fff;
-    }
-    canvas { 
-      image-rendering: pixelated; 
-      border: 2px solid #ffd700;
-      box-shadow: 0 0 20px #ffd700;
-      max-width: 100vw;
-      max-height: 100vh;
-    }
-    #ui-overlay {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      pointer-events: none;
-      z-index: 100;
-    }
-    .hud {
-      background: rgba(0,0,0,0.8);
-      padding: 10px;
-      border: 1px solid #ffd700;
-      border-radius: 5px;
-      margin: 5px;
-      pointer-events: auto;
-    }
-    button {
-      background: #ffd700;
-      color: #000;
-      border: none;
-      padding: 10px 20px;
-      margin: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover { background: #ffed4a; }
-    #inventory-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-    }
-    .item-slot {
-      width: 40px;
-      height: 40px;
-      background: rgba(255,255,255,0.1);
-      border: 2px solid #666;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
-    .item-slot.equipped { border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+    body { margin:0; background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%); display:flex; flex-direction:column; height:100vh; font-family: 'Courier New', monospace; color: #fff; }
+    canvas { flex:1; image-rendering: pixelated; border: 2px solid #ffd700; box-shadow: 0 0 20px #ffd700; }
+    #ui { position:absolute; bottom:10px; left:10px; right:10px; pointer-events:none; z-index:100; }
+    .hud { background:rgba(0,0,0,0.8); color:#ffd700; padding:12px; border:2px solid #ffd700; border-radius:8px; display:inline-block; pointer-events:auto; margin:5px; }
+    button { background:#ffd700; color:#000; border:none; padding:8px 16px; margin:3px; font-weight:bold; border-radius:5px; cursor:pointer; transition: all 0.2s; }
+    button:hover { background:#ffed4a; transform: scale(1.05); }
+    button:disabled { background:#666; cursor:not-allowed; transform:none; }
+    #inv-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 500px; }
+    .item { width:50px; height:50px; background:rgba(255,255,255,0.2); border:2px solid #666; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; border-radius:5px; }
+    .item.equipped { border-color:#ffd700; box-shadow:0 0 15px #ffd700; }
+    .item:hover { background:rgba(255,215,0,0.3); }
+    #skills { display:flex; gap:10px; flex-wrap:wrap; }
+    #map-select { position:absolute; top:10px; right:10px; }
+    .map-btn { background:linear-gradient(45deg, #4a90e2, #357abd); color:#fff; }
+    .quest-log { max-height:200px; overflow-y:auto; font-size:14px; }
   </style>
 </head>
 <body>
-  <div id="ui-overlay">
+  <div id="ui">
     <div class="hud">
-      <div>Level: <span id="level">1</span> | HP: <span id="hp">100/100</span> | Gold: <span id="gold">0</span> | Time: <span id="playtime">0h 0m</span></div>
-      <button onclick="showInventory()">Inventory</button>
-      <button onclick="talkToNPC()">Talk</button>
-      <button onclick="saveGame()">Save</button>
+      <strong>LV <span id="level">1</span></strong> | HP <span id="hp">100/100</span> | MP <span id="mp">50/50</span> | Gold <span id="gold">0</span> | <span id="quests">Quests: 0/5</span>
     </div>
-    <div id="inventory" class="hud" style="display:none;">
-      <h3>Inventory & Equipment</h3>
-      <div id="inventory-grid"></div>
-      <button onclick="closeInventory()">Close</button>
+    <div class="hud">
+      <button onclick="showMenu('inventory')">Inventory</button>
+      <button onclick="showMenu('skills')">Skills</button>
+      <button onclick="showMenu('quests')">Quests</button>
+      <button onclick="manualSave()">Save</button>
+      <div id="menu-inv" style="display:none;">
+        <h3>Inventory</h3><div id="inv-grid"></div>
+      </div>
+      <div id="menu-skills" style="display:none;">
+        <h3>Skills</h3>
+        <div id="skills"></div>
+      </div>
+      <div id="menu-quests" style="display:none;">
+        <h3>Quest Log</h3>
+        <div id="quest-log" class="quest-log"></div>
+      </div>
     </div>
   </div>
+  <div id="map-select" class="hud">
+    <button class="map-btn" onclick="changeMap('village')">Village</button>
+    <button class="map-btn" onclick="changeMap('forest')">Forest</button>
+    <button class="map-btn" onclick="changeMap('dungeon')">Dungeon</button>
+    <button class="map-btn" onclick="changeMap('boss')">Boss Cave</button>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <script src="game.js"></script>
   <script>
-    // Simple UI helpers (100% GitHub)
-    function showInventory() { document.getElementById('inventory').style.display = 'block'; }
-    function closeInventory() { document.getElementById('inventory').style.display = 'none'; }
-    function talkToNPC() { gameScene.scene.dialogue.show('village-elder', 'Welcome hero! Quest: Defeat 5 slimes. Reward: 500 gold!'); }
-    function saveGame() { localStorage.setItem('rpgSave', JSON.stringify(window.saveData)); alert('Saved!'); }
+    let currentMenu = '';
+    function showMenu(menu) {
+      document.querySelectorAll('#ui [id^="menu-"]').forEach(el => el.style.display = 'none');
+      document.getElementById(`menu-${menu}`).style.display = 'block';
+      currentMenu = menu;
+    }
+    function changeMap(map) { window.changeMap(map); }
+    function manualSave() { localStorage.setItem('rpgSave', JSON.stringify(window.saveData)); alert('Saved!'); }
+    // Auto-update UI every sec
+    setInterval(updateUI, 1000);
+    function updateUI() {
+      if (!window.saveData) return;
+      document.getElementById('level').textContent = saveData.level;
+      document.getElementById('hp').textContent = `${saveData.hp}/${saveData.maxHp}`;
+      document.getElementById('mp').textContent = `${saveData.mp}/${saveData.maxMp}`;
+      document.getElementById('gold').textContent = saveData.gold;
+      document.getElementById('quests').textContent = `Quests: ${saveData.quests.completed.length}/${Object.keys(saveData.quests.available).length}`;
+      updateInvUI();
+      updateSkillsUI();
+      updateQuestsUI();
+    }
+    function updateInvUI() {
+      const grid = document.getElementById('inv-grid');
+      grid.innerHTML = '';
+      saveData.inventory.forEach(item => {
+        const slot = document.createElement('div');
+        slot.className = 'item' + (saveData.equipment.weapon === item ? ' equipped' : '');
+        slot.innerHTML = item === 'sword' ? '⚔️' : item === 'potion' ? '🧪' : item === 'fire_staff' ? '🔥' : '💎';
+        slot.onclick = () => { saveData.equipment.weapon = item; updateUI(); };
+        grid.appendChild(slot);
+      });
+    }
+    function updateSkillsUI() {
+      const cont = document.getElementById('skills');
+      cont.innerHTML = '';
+      saveData.skills.forEach(skill => {
+        const btn = document.createElement('button');
+        btn.textContent = skill.name;
+        btn.onclick = () => window.castSkill(skill.id);
+        cont.appendChild(btn);
+      });
+    }
+    function updateQuestsUI() {
+      const log = document.getElementById('quest-log');
+      log.innerHTML = Object.values(saveData.quests.available).map(q => 
+        `<div>${q.name}: ${q.progress}/${q.target} ${saveData.quests.completed.includes(q.id) ? '✅' : ''}</div>`
+      ).join('');
+    }
   </script>
 </body>
 </html>
