@@ -1,1 +1,94 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>My Epic RPG - FULL VERSION ⚔️✨</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { 
+      margin:0; 
+      background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%); 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      height:100vh; 
+      font-family: 'Courier New', monospace;
+      color: #fff;
+    }
+    canvas { 
+      image-rendering: pixelated; 
+      border: 2px solid #ffd700;
+      box-shadow: 0 0 20px #ffd700;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+    #ui-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .hud {
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border: 1px solid #ffd700;
+      border-radius: 5px;
+      margin: 5px;
+      pointer-events: auto;
+    }
+    button {
+      background: #ffd700;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover { background: #ffed4a; }
+    #inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+    .item-slot {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .item-slot.equipped { border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+  </style>
+</head>
+<body>
+  <div id="ui-overlay">
+    <div class="hud">
+      <div>Level: <span id="level">1</span> | HP: <span id="hp">100/100</span> | Gold: <span id="gold">0</span> | Time: <span id="playtime">0h 0m</span></div>
+      <button onclick="showInventory()">Inventory</button>
+      <button onclick="talkToNPC()">Talk</button>
+      <button onclick="saveGame()">Save</button>
+    </div>
+    <div id="inventory" class="hud" style="display:none;">
+      <h3>Inventory & Equipment</h3>
+      <div id="inventory-grid"></div>
+      <button onclick="closeInventory()">Close</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="game.js"></script>
+  <script>
+    // Simple UI helpers (100% GitHub)
+    function showInventory() { document.getElementById('inventory').style.display = 'block'; }
+    function closeInventory() { document.getElementById('inventory').style.display = 'none'; }
+    function talkToNPC() { gameScene.scene.dialogue.show('village-elder', 'Welcome hero! Quest: Defeat 5 slimes. Reward: 500 gold!'); }
+    function saveGame() { localStorage.setItem('rpgSave', JSON.stringify(window.saveData)); alert('Saved!'); }
+  </script>
+</body>
+</html>
